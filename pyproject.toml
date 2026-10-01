@@ -1,0 +1,10 @@
+[project]
+name = "DT2470-G6-project"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "mirdata==1.0.0",
+    "soundfile>=0.13,<0.15",
+]
