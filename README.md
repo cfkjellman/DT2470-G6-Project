@@ -56,3 +56,26 @@ uv run --locked python scripts/download_dataset.py
 `data/`, `results/`, and `.venv/` are ignored by Git. Store audio locally and
 share the downloader and configuration through Git.
 
+## Development and test sets
+
+The fixed split is saved in `metadata/ballroom_splits.csv`, which is tracked in
+Git. It assigns all 698 excerpts to **140 development** and **558 test** excerpts
+using random seed **42**. No audio files are moved or copied.
+
+The split approximately preserves the proportions of the eight dance styles.
+The three Rumba folders are treated as one style for sampling. Duplicate
+recordings are kept in the same split, even when their dance labels differ.
+`metadata/ballroom_duplicate_pairs.csv` records the 13 pairs published by the
+[Ballroom annotation maintainers](https://github.com/CPJKU/BallroomAnnotations#description).
+The generator also groups identical decoded audio. This covers known recording
+replicas and exact matches; unidentified overlapping recordings could remain.
+
+To reproduce the split after downloading the dataset:
+
+```bash
+uv run --locked python scripts/create_splits.py
+```
+
+Join `metadata/ballroom_splits.csv` to `data/ballroom/metadata.csv` using
+`track_id` to find the audio and reference annotations. The split CSV includes
+`dance_style` and `duplicate_group` so related excerpts remain identifiable.
