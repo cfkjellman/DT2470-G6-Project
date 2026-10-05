@@ -1,0 +1,51 @@
+track_id,split,dance_style,review_batch,human_vocals,notes
+Albums-Ballroom_Classics4-09,development,tango,additional_20,no,some sounds pass thorugh on the vocal version
+Albums-Ballroom_Classics4-11,development,viennesewaltz,initial_30,no,
+Albums-Ballroom_Magic-15,development,quickstep,initial_30,yes,
+Albums-Chrisanne1-13,development,quickstep,additional_20,yes,
+Albums-Chrisanne2-03,development,waltz,initial_30,yes,instruments where also picked up in the vocal version in the beginning
+Albums-Fire-02,development,samba,initial_30,yes,speech in the beginning
+Albums-Fire-13,development,waltz,additional_20,yes,flute passes through a bit on the vocal version
+Albums-I_Like_It2-01,development,chachacha,initial_30,yes,just some laughing in the beginning unsure if that would count
+Albums-Latin_Jam2-03,development,samba,additional_20,no,
+Albums-Latin_Jam2-13,development,chachacha,initial_30,no,
+Albums-Latin_Jam3-08,development,rumba,additional_20,yes,
+Albums-Latin_Jam4-03,development,rumba,initial_30,yes,
+Albums-Macumba-10,development,rumba,initial_30,yes,
+Albums-Macumba-12,development,rumba,initial_30,yes,vocals in the end
+Albums-Macumba-14,development,jive,initial_30,yes,instruments where picked up in the beginning of the vocal version and throughout you cna hear the trumpet
+Albums-Pais_Tropical-04,development,samba,additional_20,yes,
+Albums-Pais_Tropical-08,development,chachacha,initial_30,yes,
+Albums-Pais_Tropical-10,development,rumba,additional_20,yes,
+Albums-Secret_Garden-01,development,waltz,initial_30,yes,
+Albums-StrictlyDancing_Tango-09,development,tango,additional_20,no,some sounds passes through on the vocal version
+Media-100610,development,viennesewaltz,initial_30,no,The vocal version instruments where picked up
+Media-103517,development,jive,additional_20,yes,
+Media-103604,development,chachacha,additional_20,yes,
+Media-103613,development,jive,initial_30,yes,
+Media-103702,development,chachacha,additional_20,yes,
+Media-103706,development,samba,initial_30,yes,some small voices in the end but the clip ends almost directly
+Media-103716,development,chachacha,initial_30,yes,moaning in the beginning unsure if that counts
+Media-103811,development,rumba,initial_30,yes,
+Media-104104,development,samba,initial_30,yes,
+Media-104106,development,chachacha,additional_20,yes,
+Media-104118,development,jive,additional_20,yes,
+Media-104208,development,tango,additional_20,no,
+Media-104301,development,waltz,initial_30,yes,
+Media-104307,development,viennesewaltz,additional_20,yes,
+Media-104712,development,viennesewaltz,additional_20,no,some sounds from instruments passes thorugh on the vocal version
+Media-104803,development,waltz,initial_30,no,Violin passes through a lot
+Media-104901,development,waltz,initial_30,yes,
+Media-104915,development,quickstep,initial_30,yes,"This one is perfect in the vocal, you can only here the voice"
+Media-105108,development,tango,initial_30,no,Here some sounds passes through to the vocal version
+Media-105119,development,quickstep,initial_30,yes,
+Media-105122,development,quickstep,initial_30,yes,
+Media-105213,development,waltz,additional_20,yes,
+Media-105314,development,quickstep,additional_20,yes,
+Media-105318,development,viennesewaltz,initial_30,no,some muffling sounds passes thorugh to the vocal version
+Media-105403,development,samba,initial_30,yes,
+Media-105615,development,rumba,additional_20,no,
+Media-105702,development,waltz,additional_20,yes,
+Media-105806,development,tango,initial_30,no,
+Media-105903,development,tango,initial_30,no,
+Media-106101,development,chachacha,initial_30,yes,

@@ -1,0 +1,8 @@
+{
+  "method": "demucs_window_energy_v1",
+  "window_seconds": 1.0,
+  "minimum_window_energy_ratio": 0.18,
+  "minimum_original_window_energy_fraction": 0.1,
+  "minimum_vocal_fraction": 0.3333333333333333,
+  "description": "Automatic candidates: vocal-stem energy is at least 18% of mixture energy in non-overlapping one-second windows covering at least one third of the excerpt. Ignore windows below 10% of the excerpt's mean mixture energy. This is an energy heuristic, not verified human-vocal duration."
+}
