@@ -1,8 +1,4 @@
 {
-  "selection_sha256": "4bf3a08f300d3d95442ca64b8602eee2285773bce58fb50911b93ef51babfc00",
-  "splits_sha256": "1ecad22595d9e625c085ee842941c867eaf74883ac6b0ca235ebd1c1bc4a8bbf",
-  "source_metadata_sha256": "b7b96997551b8dec94a975706906f93cbced294f4fb041711e6303927a46f2bf",
-  "reviews_sha256": "01e7f31152169cc8348fb585348d960d42f18257c3454db534253849c73ea7ad",
   "selection": {
     "method": "demucs_window_energy_v1",
     "window_seconds": 1.0,
@@ -34,8 +30,14 @@
   },
   "development_count": 140,
   "test_pool_count": 558,
-  "test_count": 219,
-  "test_status": "automatically selected substantial-vocal candidates; human verification is incomplete",
-  "development_manifest_sha256": "a440e3ba1acb419a426290f0031c17040dd961946ab06ccfde5d9f9dd8cc302a",
-  "test_manifest_sha256": "75e01b09a19e31be32fa9eefe81dac78ae942cbfc6920ad81ecbaf45a1069b5c"
+  "test_count": 208,
+  "test_review": {
+    "candidate_count": 219,
+    "yes": 208,
+    "no": 9,
+    "uncertain": 2,
+    "unlabeled": 0,
+    "criterion": "Clearly audible human vocals for roughly one third of the original excerpt."
+  },
+  "test_status": "manually confirmed substantial-vocal excerpts; only yes labels are included"
 }

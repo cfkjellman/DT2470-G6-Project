@@ -102,13 +102,15 @@ energy, while very quiet windows are ignored. The settings are in
 The resulting sets are:
 
 - `metadata/development_set.csv`: all 140 development excerpts.
-- `metadata/test_set.csv`: 219 test candidates with estimated vocal activity
-  for at least one-third of the excerpt.
-- `metadata/test_selection.csv`: the selection result for all 558 test excerpts.
+- `metadata/test_set.csv`: 208 manually confirmed songs with strong vocals.
+- `metadata/test_selection.csv`: the automatic selection and final inclusion
+  for all 558 reserved test excerpts.
 
-Demucs can also put instruments in the vocal stem sometimes. We listen to 30 test
-candidates to check that they contain strong vocals before using the set for
-our experiment. The local review file is `results/test_vocal_review/review.csv`.
+Demucs sometimes puts instruments in the vocal stem. We listened to all 219
+candidates and kept songs with clear human vocals for roughly one-third of the
+excerpt. We rejected nine violin excerpts and left out two uncertain songs with
+very little singing. The labels and notes are in `metadata/test_vocal_reviews.csv`.
+Preparation uses these labels, so rerunning it keeps the same confirmed test set.
 
 ## Load the datasets in Python
 

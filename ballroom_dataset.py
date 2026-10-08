@@ -1,4 +1,4 @@
-"""Access the prepared Ballroom development and strong-vocal candidate sets."""
+"""Access the prepared Ballroom development and confirmed strong-vocal test sets."""
 
 from dataclasses import dataclass
 import csv
@@ -98,5 +98,5 @@ def get_development_set() -> list[BallroomTrack]:
 
 
 def get_test_set() -> list[BallroomTrack]:
-    """Return automatically selected substantial-vocal test candidates."""
+    """Return manually confirmed substantial-vocal test excerpts."""
     return _get_set("test")
