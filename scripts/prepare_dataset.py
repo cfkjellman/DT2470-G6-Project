@@ -120,15 +120,22 @@ def save_development_check(completed, reviews):
 
 
 def save_datasets(completed, source, reviews):
+    test_reviews = {row["track_id"]: row for row in read_csv(METADATA / "test_vocal_reviews.csv")}
+    candidates = {track_id for track_id, row in completed.items()
+                  if row["split"] == "test" and row["strong_vocal_candidate"]}
+    if set(test_reviews) != candidates:
+        raise ValueError("Test listening labels must match the automatically selected candidates.")
     development, test, audit = [], [], []
     for track_id in sorted(completed):
         row = completed[track_id]
         row["reference_bpm"] = source[track_id]["reference_bpm"]
-        row["human_vocals"] = reviews.get(track_id, {}).get("human_vocals", "")
+        labels = reviews if row["split"] == "development" else test_reviews
+        row["human_vocals"] = labels.get(track_id, {}).get("human_vocals", "")
         record = {field: row[field] for field in MANIFEST_FIELDS}
         if row["split"] == "development":
             development.append(record)
         else:
+            included = row["strong_vocal_candidate"] and row["human_vocals"] == "yes"
             audit.append({
                 "track_id": track_id,
                 "dance_style": row["dance_style"],
@@ -136,19 +143,22 @@ def save_datasets(completed, source, reviews):
                 "estimated_vocal_seconds": row["estimated_vocal_seconds"],
                 "estimated_vocal_fraction": row["estimated_vocal_fraction"],
                 "selected": row["strong_vocal_candidate"],
+                "human_vocals": row["human_vocals"],
+                "in_test_set": included,
             })
-            if row["strong_vocal_candidate"]:
+            if included:
                 test.append(record)
     write_csv(METADATA / "development_set.csv", MANIFEST_FIELDS, development)
     write_csv(METADATA / "test_set.csv", MANIFEST_FIELDS, test)
     write_csv(METADATA / "test_selection.csv", list(audit[0]), audit)
 
-    # Keep listening labels and notes when regenerating the review file.
+    # Keep all candidates in the listening file, including rejected songs.
     review_path = PROJECT_ROOT / "results/test_vocal_review/review.csv"
     old_reviews = {row["track_id"]: row for row in read_csv(review_path)} if review_path.exists() else {}
     review_rows = []
-    for row in test:
-        old = old_reviews.get(row["track_id"], {})
+    for track_id in sorted(candidates):
+        row = completed[track_id]
+        old = old_reviews.get(track_id, test_reviews[track_id])
         review_rows.append({
             "track_id": row["track_id"], "dance_style": row["dance_style"],
             "original_audio": row["original_audio"], "vocals_audio": row["vocals_audio"],
@@ -159,12 +169,20 @@ def save_datasets(completed, source, reviews):
         "selection": SELECTION, "separation": CONFIG,
         "development_check": save_development_check(completed, reviews),
         "development_count": len(development), "test_pool_count": len(audit), "test_count": len(test),
-        "test_status": "automatically selected substantial-vocal candidates; human verification is incomplete",
+        "test_review": {
+            "candidate_count": len(candidates),
+            "yes": sum(row["human_vocals"] == "yes" for row in test_reviews.values()),
+            "no": sum(row["human_vocals"] == "no" for row in test_reviews.values()),
+            "uncertain": sum(row["human_vocals"] == "uncertain" for row in test_reviews.values()),
+            "unlabeled": sum(not row["human_vocals"] for row in test_reviews.values()),
+            "criterion": "Clearly audible human vocals for roughly one third of the original excerpt.",
+        },
+        "test_status": "manually confirmed substantial-vocal excerpts; only yes labels are included",
     }
     temporary = METADATA / "prepared_dataset.json.part"
     temporary.write_text(json.dumps(summary, indent=2) + "\n")
     temporary.replace(METADATA / "prepared_dataset.json")
-    print(f"Saved {len(development)} development excerpts and {len(test)} test candidates.")
+    print(f"Saved {len(development)} development excerpts and {len(test)} confirmed test excerpts.")
 
 
 def main():
