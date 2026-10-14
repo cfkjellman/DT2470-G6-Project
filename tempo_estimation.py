@@ -30,21 +30,16 @@ import soundfile as sf
 from scipy import signal
 from scipy.ndimage import uniform_filter1d
 
-# ---------------------------------------------------------------------------
-# Parameters
-# ---------------------------------------------------------------------------
+
 WINDOW_SEC = 0.050          # STFT window length (notebook: 50 ms)
 OVERLAP_SEC = 0.025         # STFT overlap (notebook) -> hop = window - overlap
 GAMMA = 1000                # log-compression strength (notebook, Eq. 6.5)
 LOCAL_AVG_SEC = 0.1         # half-width M of the local average (notebook)
-TEMPO_WIN_SEC = 8.0         # tempogram window length
+TEMPO_WIN_SEC = 8.0         # tempogram window length, 4-12 is reasonable according to FMP
 TEMPO_HOP_SEC = 0.5         # tempogram hop
 BPM_AXIS = np.arange(40, 251, 1.0)
 
 
-# ---------------------------------------------------------------------------
-# 0. Audio
-# ---------------------------------------------------------------------------
 def load_audio(path):
     """Read a .wav file as mono float. Returns (data, sample_rate)."""
     data, sample_rate = sf.read(path, dtype="float64")
@@ -53,9 +48,7 @@ def load_audio(path):
     return data, sample_rate
 
 
-# ---------------------------------------------------------------------------
-# 1. Onset detection: spectral novelty (FMP Eq. 6.5-6.8)
-# ---------------------------------------------------------------------------
+# Onset detection: spectral novelty (FMP Eq. 6.5-6.8)
 def compute_local_average(x, M):
     """Local average over a centred window of 2M+1 samples.
 
@@ -71,7 +64,7 @@ def compute_novelty(data, sample_rate, window_sec=WINDOW_SEC, overlap_sec=OVERLA
     """Spectral-based novelty curve.
 
     Returns (novelty, fs_novelty) where fs_novelty is the novelty sampling
-    rate in Hz (about 40 Hz with the default settings).
+    rate in Hz.
     """
     window_len = int(window_sec * sample_rate)
     window_overlap = int(overlap_sec * sample_rate)
@@ -94,9 +87,7 @@ def compute_novelty(data, sample_rate, window_sec=WINDOW_SEC, overlap_sec=OVERLA
     return novelty, fs_novelty
 
 
-# ---------------------------------------------------------------------------
-# 2. Tempograms
-# ---------------------------------------------------------------------------
+# Tempograms
 def _frames(novelty, win_len, hop_len):
     """Overlapping windows of the novelty curve, zero-padded at the ends."""
     padded = np.pad(novelty, win_len // 2)
@@ -111,6 +102,8 @@ def tempogram_fourier(novelty, fs_novelty, win_sec=TEMPO_WIN_SEC,
 
     Compares each window of the novelty curve with a windowed complex
     sinusoid per tempo. Tends to show harmonics (2x, 3x the true tempo).
+
+    FMP Eq. (6.25) & (6.26)
     """
     win_len = int(round(win_sec * fs_novelty))
     hop_len = max(1, int(round(hop_sec * fs_novelty)))
@@ -122,7 +115,7 @@ def tempogram_fourier(novelty, fs_novelty, win_sec=TEMPO_WIN_SEC,
 
 
 def tempogram_autocorr(novelty, fs_novelty, win_sec=TEMPO_WIN_SEC,
-                       hop_sec=TEMPO_HOP_SEC, bpm=BPM_AXIS):
+                       hop_sec=TEMPO_HOP_SEC, bpm=BPM_AXIS, window_type="hanning"):
     """Autocorrelation tempogram, shape (len(bpm), number of frames).
 
     Local autocorrelation with lag converted to BPM = 60 * fs / lag.
@@ -130,19 +123,21 @@ def tempogram_autocorr(novelty, fs_novelty, win_sec=TEMPO_WIN_SEC,
     """
     win_len = int(round(win_sec * fs_novelty))
     hop_len = max(1, int(round(hop_sec * fs_novelty)))
-    frames = _frames(novelty, win_len, hop_len) * np.hanning(win_len)[None, :]
+
+    if window_type.lower() == "hanning":
+        frames = _frames(novelty, win_len, hop_len) * np.hanning(win_len)[None, :]
+    else: # elif window_type.lower() == "rectangular": , won't be accessed by user anyway
+        frames = _frames(novelty, win_len, hop_len) * np.ones(win_len)[None, :] 
     n_fft = 2 ** int(np.ceil(np.log2(2 * win_len)))
     F = np.fft.rfft(frames, n_fft, axis=1)
-    ac = np.fft.irfft(np.abs(F) ** 2, n_fft, axis=1)[:, :win_len]
+    ac = np.fft.irfft(np.abs(F) ** 2, n_fft, axis=1)[:, :win_len]   # wiener-khinchin: ac = invFFT(|x|^2)
     ac /= (win_len - np.arange(win_len))[None, :]
     ac = np.maximum(ac, 0)
     lags = 60.0 * fs_novelty / bpm
     return np.stack([np.interp(lags, np.arange(win_len), row) for row in ac], axis=1)
 
 
-# ---------------------------------------------------------------------------
-# 3. Global tempo
-# ---------------------------------------------------------------------------
+# Global tempo
 def _normalise(v):
     return v / v.max() if v.max() > 0 else v
 
@@ -157,16 +152,22 @@ def global_tempo_curve(novelty, fs_novelty, method="combined", bpm=BPM_AXIS):
 
     method: "fourier", "autocorr" or "combined" (product of both, so the
     Fourier harmonics and the autocorrelation subharmonics cancel out).
+
+    "Also, to alleviate the problem
+    of tempo octave confusion, one may improve the result by a combined usage of the
+    Fourier and autocorrelation tempograms." - Müller, FMP
     """
     if method == "fourier":
         return _normalise(tempogram_fourier(novelty, fs_novelty, bpm=bpm).mean(axis=1))
     if method == "autocorr":
-        return _normalise(tempogram_autocorr(novelty, fs_novelty, bpm=bpm).mean(axis=1))
+        return _normalise(tempogram_autocorr(novelty, fs_novelty, bpm=bpm, window_type="hanning").mean(axis=1))
+    # if method == "autocorr_rect":
+    #     return _normalise(tempogram_autocorr(novelty, fs_novelty, bpm=bpm, window_type="rect").mean(axis=1))
     if method == "combined":
         f = global_tempo_curve(novelty, fs_novelty, "fourier", bpm)
         a = global_tempo_curve(novelty, fs_novelty, "autocorr", bpm)
         return _normalise(f * a)
-    raise ValueError(f"Unknown method: {method}")
+    raise ValueError(f"Unknown method: {method}") 
 
 
 def estimate_tempo_from_novelty(novelty, fs_novelty, method="combined",
@@ -178,9 +179,9 @@ def estimate_tempo_from_novelty(novelty, fs_novelty, method="combined",
         curve = curve * tempo_prior(bpm, prior_center, prior_octave_width)
     k = int(np.argmax(curve))
 
-    # The autocorrelation lag grid is coarse (one novelty sample = 25 ms), so
-    # once the metrical level is chosen, take the exact peak from the Fourier
-    # curve within +-6 % of it.
+    # The autocorrelation lag grid is coarse (one novelty sample = 25 ms, with 
+    # current default params), so once the metrical level is chosen, take the 
+    # exact peak from the Fourier curve within +-6 % of it.
     if method != "autocorr":
         fourier = global_tempo_curve(novelty, fs_novelty, "fourier", bpm)
         near = np.abs(bpm - bpm[k]) <= 0.06 * bpm[k]
@@ -206,23 +207,22 @@ def estimate_tempo(audio, sample_rate=None, **kwargs):
     return estimate_tempo_from_novelty(novelty, fs_novelty, **kwargs)[0]
 
 
-# ---------------------------------------------------------------------------
-# 4. Evaluation
-# ---------------------------------------------------------------------------
+# Evaluation
 def evaluate(est_bpm, ref_bpm, tol=0.04):
     """abs_error in BPM; acc1 = within +-4 % of the reference;
-    acc2 = within +-4 % of reference x {1, 2, 3, 1/2, 1/3} (octave errors ok)."""
+    acc2 = within +-4 % of reference x {1, 2, 3, 1/2, 1/3} (octave errors ok).
+    
+    see e.g. https://transactions.ismir.net/articles/10.5334/tismir.43 for more info
+    """
     est, ref = float(est_bpm), float(ref_bpm)
     return {
         "abs_error": abs(est - ref),
-        "acc1": abs(est - ref) <= tol * ref,
-        "acc2": any(abs(est - ref * f) <= tol * ref * f for f in (1, 2, 3, 1 / 2, 1 / 3)),
+        f"acc_1": abs(est - ref) <= tol * ref,
+        f"acc_2": any(abs(est - ref * f) <= tol * ref * f for f in (1, 2, 3, 1 / 2, 1 / 3)),
     }
 
 
-# ---------------------------------------------------------------------------
-# 5. Experiment: original vs. instrumental
-# ---------------------------------------------------------------------------
+# Experiment: original vs. instrumental
 def run_experiment(tracks, out_csv, **kwargs):
     """Estimate tempo for original and instrumental of every track, save a
     CSV and print a summary. `tracks` comes from ballroom_dataset."""
@@ -270,10 +270,14 @@ def print_summary(rows):
         n, a1o, a1i, a2o, a2i, mo, mi = stats(rs)
         print(f"{name:16}{n:>4}{a1o:>11.2f}{a1i:>11.2f}{a2o:>11.2f}{a2i:>11.2f}{mo:>14.2f}{mi:>14.2f}")
 
+    # report how many instrumental results are better/worse/same as original
+    # avoid small numerical/floating point differences by handling diff manually
     diff = np.array([r["orig_abs_error"] - r["inst_abs_error"] for r in rows])
+    diff = np.round(diff, decimals=6)
     print(f"\nInstrumental closer to reference: {(diff > 0.5).sum()}, "
           f"further away: {(diff < -0.5).sum()}, about equal (<0.5 BPM): "
           f"{(np.abs(diff) <= 0.5).sum()}")
+    # statistical test to determine significance of results
     if np.any(diff != 0):
         from scipy.stats import wilcoxon
         print(f"Wilcoxon signed-rank test on absolute errors: p = {wilcoxon(diff).pvalue:.4f}")
