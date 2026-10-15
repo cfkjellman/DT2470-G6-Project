@@ -143,3 +143,14 @@ We compare the estimates with the reference tempos using absolute BPM error
 and accuracy within 4%. We also count half and double tempo estimates and
 show results by dance style. The three example plots mark these tempo levels.
 The full results are saved in `results/tempo_estimator_development.csv`.
+
+## Test experiment
+
+`test_notebook.ipynb` compares the original and instrumental versions of all
+208 test excerpts using both methods and the same settings as the development
+notebook. We compare BPM errors, strict accuracy and accuracy accepting half
+or double tempo, then show how many excerpts improved or worsened.
+
+The estimates are saved in `results/test_tempo_results.csv` and the plots in
+`results/test_notebook/`. After running the experiment once, we can read the
+saved CSV to redraw the plots without estimating the tempos again.
