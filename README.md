@@ -57,8 +57,8 @@ uv run --locked python scripts/download_dataset.py
 
 ## Development and test sets
 
-We split the 698 excerpts into 140 development excerpts and 558 reserved test
-excerpts, using seed 42. The development set contains different dance styles
+We split the 698 excerpts into 140 development excerpts and 558 excerpts for
+test selection, using seed 42. The development set contains different dance styles
 and songs both with and without vocals. Copies of the same recording stay in
 the same split to avoid overlap. The known duplicate pairs come from the
 [Ballroom annotation maintainers](https://github.com/CPJKU/BallroomAnnotations#description).
@@ -128,3 +128,18 @@ print(track.original_path, track.instrumental_path, track.reference_bpm)
 
 Both functions return track information and audio paths, ready to use in our
 Python code.
+
+## Tempo estimator
+
+`tempo_estimator.ipynb` shows how we estimate tempo using Fourier and
+autocorrelation tempograms. We go through one excerpt step by step, try three
+examples, then run both methods on all 140 original development excerpts.
+
+The parameters are defined near the top of the notebook. The calculation
+functions are in `tempo_estimator.py`. We load the audio with soundfile and
+use each file's sample rate.
+
+We compare the estimates with the reference tempos using absolute BPM error
+and accuracy within 4%. We also count half and double tempo estimates and
+show results by dance style. The three example plots mark these tempo levels.
+The full results are saved in `results/tempo_estimator_development.csv`.

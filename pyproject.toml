@@ -8,6 +8,7 @@ dependencies = [
     "demucs==4.0.1",
     "mirdata==1.0.0",
     "numpy>=1.26,<2",
+    "scipy>=1.15",
     "soundfile>=0.13,<0.15",
     "torch==2.0.1",
     "torchaudio==2.0.2",
@@ -18,7 +19,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["ballroom_dataset"]
+py-modules = ["ballroom_dataset", "tempo_estimator"]
 
 [dependency-groups]
 dev = [

@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = "==3.11.*"
 resolution-markers = [
     "sys_platform == 'win32'",
@@ -471,6 +471,7 @@ dependencies = [
     { name = "demucs" },
     { name = "mirdata" },
     { name = "numpy" },
+    { name = "scipy" },
     { name = "soundfile" },
     { name = "torch" },
     { name = "torchaudio" },
@@ -487,6 +488,7 @@ requires-dist = [
     { name = "demucs", specifier = "==4.0.1" },
     { name = "mirdata", specifier = "==1.0.0" },
     { name = "numpy", specifier = ">=1.26,<2" },
+    { name = "scipy", specifier = ">=1.15" },
     { name = "soundfile", specifier = ">=0.13,<0.15" },
     { name = "torch", specifier = "==2.0.1" },
     { name = "torchaudio", specifier = "==2.0.2" },
