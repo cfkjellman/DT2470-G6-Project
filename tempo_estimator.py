@@ -126,28 +126,32 @@ def autocorrelation_tempogram(
     return tempogram, centers / novelty_rate
 
 
-def tempo_prior(bpms: np.ndarray, center: float, width: float) -> np.ndarray:
-    """Weight candidate tempos around a center, with width measured in octaves."""
-    return np.exp(-0.5 * (np.log2(bpms / center) / width) ** 2)
-
-
 def global_tempo_estimation(
     tempogram: np.ndarray,
     bpms: np.ndarray,
-    prior_center=None,
-    prior_width=1.0,
 ):
     # Equation 6.32: average each candidate tempo's strength across time.
     global_strength = tempogram.mean(axis=1)
-
-    if prior_center is not None:
-        global_strength = global_strength * tempo_prior(bpms, prior_center, prior_width)
 
     # Select the BPM corresponding to the maximum, following Eq. 6.33.
     best_index = np.argmax(global_strength)
     estimated_bpm = float(bpms[best_index])
 
     return estimated_bpm, global_strength
+
+
+def combined_tempo_estimation(fourier_strength, autocorr_strength, bpms):
+    """Multiply the normalized global strength curves and select a tempo."""
+    # Leave an all-zero curve unchanged to avoid dividing by zero.
+    if fourier_strength.max() > 0:
+        fourier_strength = fourier_strength / fourier_strength.max()
+    if autocorr_strength.max() > 0:
+        autocorr_strength = autocorr_strength / autocorr_strength.max()
+
+    combined_strength = fourier_strength * autocorr_strength
+    estimated_bpm = float(bpms[np.argmax(combined_strength)])
+
+    return estimated_bpm, combined_strength
 
 
 def compute_novelty(data, sample_rate, parameters):
@@ -170,21 +174,27 @@ def estimate_tempo(data, sample_rate, parameters, method):
     novelty, novelty_rate = compute_novelty(data, sample_rate, parameters)
     bpms = np.arange(parameters["bpm_min"], parameters["bpm_max"] + 1)
 
-    if method == "fourier":
-        tempogram_function = fourier_tempogram
-    elif method == "autocorr":
-        tempogram_function = autocorrelation_tempogram
-    else:
-        raise ValueError(f"Unknown tempo method: {method}")
+    if method in ("fourier", "combined"):
+        tempogram, _ = fourier_tempogram(
+            novelty, novelty_rate, bpms,
+            window_seconds=parameters["tempogram_window_size"],
+            hop_seconds=parameters["tempogram_hop_size"],
+        )
+        fourier_bpm, fourier_strength = global_tempo_estimation(tempogram, bpms)
 
-    tempogram, _ = tempogram_function(
-        novelty, novelty_rate, bpms,
-        window_seconds=parameters["tempogram_window_size"],
-        hop_seconds=parameters["tempogram_hop_size"],
-    )
-    return global_tempo_estimation(
-        tempogram,
-        bpms,
-        prior_center=parameters.get("prior_center"),
-        prior_width=parameters.get("prior_width", 1.0),
-    )
+    if method in ("autocorr", "combined"):
+        tempogram, _ = autocorrelation_tempogram(
+            novelty, novelty_rate, bpms,
+            window_seconds=parameters["tempogram_window_size"],
+            hop_seconds=parameters["tempogram_hop_size"],
+        )
+        autocorr_bpm, autocorr_strength = global_tempo_estimation(tempogram, bpms)
+
+    if method == "fourier":
+        return fourier_bpm, fourier_strength
+    if method == "autocorr":
+        return autocorr_bpm, autocorr_strength
+    if method == "combined":
+        return combined_tempo_estimation(fourier_strength, autocorr_strength, bpms)
+
+    raise ValueError(f"Unknown tempo method: {method}")
