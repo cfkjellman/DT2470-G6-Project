@@ -131,9 +131,11 @@ Python code.
 
 ## Tempo estimator
 
-`tempo_estimator.ipynb` shows how we estimate tempo using Fourier and
-autocorrelation tempograms. We go through one excerpt step by step, try three
-examples, then run both methods on all 140 original development excerpts.
+`tempo_estimator.ipynb` shows how we estimate tempo using Fourier,
+autocorrelation and a combination of the two. The combined method multiplies
+their normalized global strength curves. We go through one excerpt step by
+step, try three examples, then run all three methods on the 140 original
+development excerpts.
 
 The parameters are defined near the top of the notebook. The calculation
 functions are in `tempo_estimator.py`. We load the audio with soundfile and
@@ -147,8 +149,8 @@ The full results are saved in `results/tempo_estimator_development.csv`.
 ## Test experiment
 
 `test_notebook.ipynb` compares the original and instrumental versions of all
-208 test excerpts using both methods and the same settings as the development
-notebook. We compare BPM errors, strict accuracy and accuracy accepting half
+208 test excerpts using all three methods and the same settings as the
+development notebook. We compare BPM errors, strict accuracy and accuracy accepting half
 or double tempo, then show how many excerpts improved or worsened.
 
 The estimates are saved in `results/test_tempo_results.csv` and the plots in
